@@ -6,7 +6,7 @@ const winston = require("winston");
 const app = express();
 
 
-const PORT = 3002;
+const PORT = process.env.PORT || 3002;
 //
 // Throws an error if the PORT environment variable is missing.
 //

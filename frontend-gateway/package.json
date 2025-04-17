@@ -1,0 +1,31 @@
+{
+  "name": "frontend-gateway",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "build": "echo \"Building the frontend gateway...\"",
+    "dev": "nodemon index.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prettier": "prettier --write .",
+    "prettier:check": "prettier --check .",
+    "prettier:fix": "prettier --write .",
+    "test:unit": "jest --config jest.config.js --runInBand",
+    "test:integration": "jest --config jest.config.js --runInBand",
+    "test:e2e": "jest --config jest.config.js --runInBand",
+    "test:all": "jest --config jest.config.js --runInBand",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0",
+    "nodemon": "^3.1.9",
+    "winston": "^3.17.0"
+  }
+}

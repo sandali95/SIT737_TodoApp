@@ -6,11 +6,6 @@ let app;
 const PUBLIC_DIR = path.join(__dirname, './public');
 
 beforeAll(() => {
-  fs.mkdirSync(PUBLIC_DIR, { recursive: true });
-  fs.writeFileSync(
-    path.join(PUBLIC_DIR, 'index.html'),
-    '<!DOCTYPE html><html><body><h1>Home</h1></body></html>'
-  );
 
   fs.writeFileSync(path.join(PUBLIC_DIR, 'dummy.txt'), 'static file');
 
@@ -19,7 +14,7 @@ beforeAll(() => {
 
 afterAll(() => {
   // Clean up the public folder
-  fs.rmSync(PUBLIC_DIR, { recursive: true, force: true });
+ // fs.rmSync(PUBLIC_DIR, { recursive: true, force: true });
 });
 
 describe('Frontend Service (Express Static Server)', () => {
@@ -27,7 +22,7 @@ describe('Frontend Service (Express Static Server)', () => {
     const res = await request(app).get('/home');
     expect(res.status).toBe(200);
     expect(res.headers['content-type']).toMatch(/html/);
-    expect(res.text).toContain('<!DOCTYPE html><html><body><h1>Home</h1></body></html>');
+    expect(res.text).toContain('<h1>Todo App</h1>');
   });
 
   test('GET /dummy.txt → serves static asset', async () => {

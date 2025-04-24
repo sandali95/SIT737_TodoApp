@@ -3,7 +3,7 @@ name: CI/CD • Frontend Service
 on:
   push:
     paths:
-      - 'frontend-service/**'
+      - 'frontend-gateway/**'
       - '.github/workflows/frontend-service.yml'
 
 jobs:

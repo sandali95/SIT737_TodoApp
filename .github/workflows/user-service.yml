@@ -1,10 +1,10 @@
-name: CI/CD • Frontend Service
+name: CI/CD • User Service
 
 on:
   push:
     paths:
-      - 'frontend-service/**'
-      - '.github/workflows/frontend-service.yml'
+      - 'user-service/**'
+      - '.github/workflows/user-service.yml'
 
 jobs:
   build-and-deploy:
@@ -19,7 +19,7 @@ jobs:
 
       - name: Install dependencies & run tests
         run: |
-          cd frontend-gateway
+          cd user-service
           npm ci
           npm test
 
@@ -32,14 +32,14 @@ jobs:
 
       - name: Build with Cloud Build
         run: |
-          gcloud builds submit frontend-service \
-            --tag=gcr.io/${{ secrets.GCP_PROJECT_ID }}/frontend-service:${{ github.sha }}
+          gcloud builds submit user-service \
+            --tag=gcr.io/${{ secrets.GCP_PROJECT_ID }}/user-service:${{ github.sha }}
 
       - name: Deploy to Cloud Run
         run: |
-          gcloud run deploy frontend-service \
-            --image=gcr.io/${{ secrets.GCP_PROJECT_ID }}/frontend-service:${{ github.sha }} \
+          gcloud run deploy user-service \
+            --image=gcr.io/${{ secrets.GCP_PROJECT_ID }}/user-service:${{ github.sha }} \
             --platform=managed \
             --region=${{ secrets.GCP_REGION || 'us-central1' }} \
             --allow-unauthenticated \
-            --port=3002
+            --port=3000

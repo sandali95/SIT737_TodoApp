@@ -1,10 +1,7 @@
 name: CI/CD • User Service
 
 on:
-  push:
-    paths:
-      - 'user-service/**'
-      - '.github/workflows/user-service.yml'
+  workflow_dispatch:   # Manual trigger
 
 jobs:
   build-and-deploy:

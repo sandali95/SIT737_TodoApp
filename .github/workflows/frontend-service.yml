@@ -1,10 +1,7 @@
 name: CI/CD • Frontend Service
 
 on:
-  push:
-    paths:
-      - 'frontend-gateway/**'
-      - '.github/workflows/frontend-service.yml'
+  workflow_dispatch:   # Manual trigger
 
 jobs:
   build-and-deploy:

@@ -30,9 +30,9 @@ jobs:
 
       - name: Build with Cloud Build
         run: |
+          cd todo-service
           gcloud builds submit todo-service \
-            --tag=gcr.io/${{ secrets.GCP_PROJECT_ID }}/todo-service:${{ github.sha }} \
-            --dockerfile=todo-service/dockerfile
+            --tag=gcr.io/${{ secrets.GCP_PROJECT_ID }}/todo-service:${{ github.sha }}
 
       - name: Deploy to Cloud Run
         run: |

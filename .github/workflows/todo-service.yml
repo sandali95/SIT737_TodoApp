@@ -38,6 +38,7 @@ jobs:
           gcloud builds submit . \
             --region=${{ secrets.GCP_REGION  }} \
             --gcs-source-staging-dir=gs://sit737-cloudbuild-staging/source \
+            --dockerfile=./Dockerfile \
             --tag=gcr.io/${{ secrets.GCP_PROJECT_ID }}/todo-service:${{ github.sha }}
             
 

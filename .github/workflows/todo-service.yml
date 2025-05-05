@@ -18,6 +18,11 @@ jobs:
         uses: google-github-actions/auth@v1
         with:
           credentials_json: '${{ secrets.GCP_SA_KEY2 }}'
+      
+      - name: Print Service Account
+        run: |
+          gcloud auth list
+        
 
       - name: Set up gcloud CLI
         uses: google-github-actions/setup-gcloud@v2

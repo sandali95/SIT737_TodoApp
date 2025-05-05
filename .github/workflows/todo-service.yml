@@ -18,11 +18,7 @@ jobs:
         uses: google-github-actions/auth@v1
         with:
           credentials_json: '${{ secrets.GCP_SA_KEY }}'
-      
-      - name: Print Service Account
-        run: |
-          gcloud auth list
-        
+              
 
       - name: Set up gcloud CLI
         uses: google-github-actions/setup-gcloud@v2
@@ -33,6 +29,10 @@ jobs:
       - name: Activate Service Account
         run: |
             gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+
+      - name: Print Service Account
+        run: |
+          gcloud auth list
 
       - name: Configure Docker for GCR
         run: |

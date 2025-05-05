@@ -53,8 +53,44 @@ jobs:
 
       - name: Deploy to GKE
         run: |
-          # Update the existing deployment image
-          kubectl set image deployment/todo-deployment \
-            todo-service=$IMAGE --namespace=default
-          # Rollout status check
-          kubectl rollout status deployment/todo-deployment --namespace=default
+          export IMAGE=${{secrets.GCP_REGION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/test/todo-service:${{ github.sha }}
+          envsubst < todo-service.yaml | kubectl apply -f -
+          
+          # Create namespace if it doesn't exist
+          kubectl create namespace todo-app --dry-run=client -o yaml | kubectl apply -f -
+          
+          # Apply the Kubernetes manifest
+          kubectl apply -f scripts/todo-service.yaml
+          
+          # Verify the deployment
+          kubectl rollout status deployment/todo-service --namespace=todo-app
+          
+          # Get deployment details
+          echo "Deployment details:"
+          kubectl get deployments -n todo-app
+          
+          # Get pod status
+          echo "Pod status:"
+          kubectl get pods -n todo-app -o wide
+          
+          # Get service details and extract external IP
+          echo "Service details:"
+          kubectl get services -n todo-app
+          
+          # Wait for LoadBalancer to get an external IP (may take a few minutes)
+          echo "Waiting for LoadBalancer to get an external IP..."
+          for i in {1..20}; do
+            EXTERNAL_IP=$(kubectl get service todo-service -n todo-app -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+            if [ -n "$EXTERNAL_IP" ]; then
+              break
+            fi
+            sleep 10
+          done
+          
+          # Output the service URL
+          if [ -n "$EXTERNAL_IP" ]; then
+            echo "Service is available at: http://$EXTERNAL_IP:3001"
+          else
+            echo "Could not retrieve external IP for the service within the timeout period"
+            exit 1
+          fi

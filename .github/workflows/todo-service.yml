@@ -1,4 +1,4 @@
-name: CI/CD  Todo Service
+name: CI/CD Todo Service
 
 on:
   workflow_dispatch:
@@ -17,21 +17,18 @@ jobs:
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v1
         with:
-          credentials_json: '${{ secrets.GCP_SA_KEY }}'    
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
 
-      - name: Set up gcloud CLI
+      - name: Set up gcloud CLI with auth plugin
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           export_default_credentials: true
-
-      - name: Install gke-gcloud-auth-plugin
-        run: |
-            sudo apt-get update && sudo apt-get install google-cloud-sdk-gke-gcloud-auth-plugin -y  
+          install_components: 'gke-gcloud-auth-plugin'
 
       - name: Activate Service Account
         run: |
-            gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+          gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
 
       - name: Print Service Account
         run: |
@@ -40,7 +37,6 @@ jobs:
       - name: Configure Docker for GCR
         run: |
           gcloud auth configure-docker ${{secrets.GCP_REGION}}-docker.pkg.dev
-
 
       - name: Build and push Docker image
         run: |
@@ -56,44 +52,31 @@ jobs:
 
       - name: Deploy to GKE
         run: |
-          export IMAGE=${{secrets.GCP_REGION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/test/todo-service:${{ github.sha }}
-          envsubst < todo-service.yaml | kubectl apply -f -
-          
           # Create namespace if it doesn't exist
           kubectl create namespace todo-app --dry-run=client -o yaml | kubectl apply -f -
           
-          # Apply the Kubernetes manifest
-          kubectl apply -f scripts/todo-service.yaml
+          # Process and apply manifest
+          export IMAGE=${{secrets.GCP_REGION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/test/todo-service:${{ github.sha }}
+          cat todo-service.yaml | envsubst | kubectl apply -f -
           
-          # Verify the deployment
+          # Verify deployment
           kubectl rollout status deployment/todo-service --namespace=todo-app
           
-          # Get deployment details
-          echo "Deployment details:"
-          kubectl get deployments -n todo-app
+          # Get resources
+          echo "=== Cluster Resources ==="
+          kubectl get deployments,pods,services -n todo-app
           
-          # Get pod status
-          echo "Pod status:"
-          kubectl get pods -n todo-app -o wide
-          
-          # Get service details and extract external IP
-          echo "Service details:"
-          kubectl get services -n todo-app
-          
-          # Wait for LoadBalancer to get an external IP (may take a few minutes)
-          echo "Waiting for LoadBalancer to get an external IP..."
-          for i in {1..20}; do
-            EXTERNAL_IP=$(kubectl get service todo-service -n todo-app -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-            if [ -n "$EXTERNAL_IP" ]; then
-              break
-            fi
-            sleep 10
+          # Wait for external IP
+          echo "Waiting for LoadBalancer external IP..."
+          for i in {1..12}; do
+            EXTERNAL_IP=$(kubectl get svc todo-service -n todo-app -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+            [ -n "$EXTERNAL_IP" ] && break || sleep 10
           done
           
-          # Output the service URL
-          if [ -n "$EXTERNAL_IP" ]; then
-            echo "Service is available at: http://$EXTERNAL_IP:3001"
-          else
-            echo "Could not retrieve external IP for the service within the timeout period"
+          if [ -z "$EXTERNAL_IP" ]; then
+            echo "::error::Failed to get LoadBalancer IP"
             exit 1
           fi
+          
+          echo "::notice::Service available at: http://$EXTERNAL_IP:3001"
+          echo "SERVICE_URL=http://$EXTERNAL_IP:3001" >> $GITHUB_ENV

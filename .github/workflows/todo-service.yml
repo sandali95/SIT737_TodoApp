@@ -57,7 +57,7 @@ jobs:
           
           # Process and apply manifest
           export IMAGE=${{secrets.GCP_REGION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/test/todo-service:${{ github.sha }}
-          cat todo-service.yaml | envsubst | kubectl apply -f -
+          cat scripts/todo-service.yaml | envsubst | kubectl apply -f -
           
           # Verify deployment
           kubectl rollout status deployment/todo-service --namespace=todo-app

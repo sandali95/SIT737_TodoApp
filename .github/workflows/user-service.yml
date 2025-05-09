@@ -1,7 +1,7 @@
-name: CI/CD • User Service
+name: CI/CD User Service
 
 on:
-  workflow_dispatch:   # Manual trigger
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -11,33 +11,62 @@ jobs:
       id-token: write
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install dependencies & run tests
-        run: |
-          cd user-service
+      - name: Install Dependencies
+        run:
+          cd user-service 
           npm ci
-          npm test
+
+      - name: Run Unit Tests
+        run: npm test
 
       - name: Authenticate to GCP
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+      - name: Set up gcloud CLI with auth plugin
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
+          install_components: 'gke-gcloud-auth-plugin'
 
-      - name: Build with Cloud Build
+      - name: Activate Service Account
+        run: |
+          gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+
+      - name: Print Service Account
+        run: |
+          gcloud auth list
+
+      - name: Configure Docker for GCR
+        run: |
+          gcloud auth configure-docker ${{secrets.GCP_REGION}}-docker.pkg.dev
+
+      - name: Build and push Docker image
         run: |
           cd user-service
-          gcloud builds submit user-service \
-            --tag=gcr.io/${{ secrets.GCP_PROJECT_ID }}/user-service:${{ github.sha }}
+          IMAGE=${{secrets.GCP_REGION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/todo-app/user-service:${{ github.sha }}
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
 
-      - name: Deploy to Cloud Run
+      - name: Get GKE credentials
         run: |
-          gcloud run deploy user-service \
-            --image=gcr.io/${{ secrets.GCP_PROJECT_ID }}/user-service:${{ github.sha }} \
-            --platform=managed \
-            --region=${{ secrets.GCP_REGION || 'us-central1' }} \
-            --allow-unauthenticated \
-            --port=3000
+          gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER_NAME }} \
+            --zone ${{ secrets.GKE_CLUSTER_ZONE }} --project ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Deploy to GKE
+        run: |
+          # Create namespace if it doesn't exist
+          kubectl create namespace todo-app --dry-run=client -o yaml | kubectl apply -f -
+          
+          # Process and apply manifest
+          export IMAGE=${{secrets.GCP_REGION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/todo-app/user-service:${{ github.sha }}
+          cat scripts/user-service.yaml | envsubst | kubectl apply -f -
+          
+          # Verify deployment
+          kubectl rollout status deployment/user-service --namespace=todo-app
+          

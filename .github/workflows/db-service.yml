@@ -1,0 +1,52 @@
+name: CI/CD MongoDB Service
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-mongo:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write    # for workload identity, if used
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+      - name: Install gcloud & auth plugin
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          export_default_credentials: true
+          install_components: gke-gcloud-auth-plugin
+
+      - name: Get GKE credentials
+        run: |
+          gcloud container clusters get-credentials \
+            ${{ secrets.GKE_CLUSTER_NAME }} \
+            --zone ${{ secrets.GKE_CLUSTER_ZONE }} \
+            --project ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Create/update mongo-secret
+        run: |
+          kubectl create secret generic mongo-secret \
+            --namespace=todo-app \
+            --from-literal=MONGO_INITDB_ROOT_USERNAME="${{ secrets.MONGO_ROOT_USER }}" \
+            --from-literal=MONGO_INITDB_ROOT_PASSWORD="${{ secrets.MONGO_ROOT_PASSWORD }}" \
+            --dry-run=client -o yaml \
+          | kubectl apply -f -
+
+      - name: Deploy MongoDB StatefulSet & Services
+        run: |
+          kubectl apply -f scripts/db-service.yaml
+
+      - name: Wait for MongoDB
+        run: |
+          kubectl rollout status statefulset/mongo -n todo-app --timeout=120s
+          kubectl get sts,pods,svc -n todo-app

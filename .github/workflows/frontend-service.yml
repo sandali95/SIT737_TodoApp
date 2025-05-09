@@ -1,7 +1,7 @@
-name: CI/CD • Frontend Service
+name: CI/CD Frontend Service
 
 on:
-  workflow_dispatch:   # Manual trigger
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -11,33 +11,80 @@ jobs:
       id-token: write
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install dependencies & run tests
-        run: |
-          cd frontend-gateway
+      - name: Install Dependencies
+        run:
+          cd frontend-service 
           npm ci
-          npm test
+
+      - name: Run Unit Tests
+        run: npm test
 
       - name: Authenticate to GCP
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+      - name: Set up gcloud CLI with auth plugin
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
+          install_components: 'gke-gcloud-auth-plugin'
 
-      - name: Build with Cloud Build
+      - name: Activate Service Account
         run: |
-          cd frontend-gateway
-          gcloud builds submit frontend-service \
-            --tag=gcr.io/${{ secrets.GCP_PROJECT_ID }}/frontend-service:${{ github.sha }}
+          gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
 
-      - name: Deploy to Cloud Run
+      - name: Print Service Account
         run: |
-          gcloud run deploy frontend-service \
-            --image=gcr.io/${{ secrets.GCP_PROJECT_ID }}/frontend-service:${{ github.sha }} \
-            --platform=managed \
-            --region=${{ secrets.GCP_REGION || 'us-central1' }} \
-            --allow-unauthenticated \
-            --port=3002
+          gcloud auth list
+
+      - name: Configure Docker for GCR
+        run: |
+          gcloud auth configure-docker ${{secrets.GCP_REGION}}-docker.pkg.dev
+
+      - name: Build and push Docker image
+        run: |
+          cd user-service
+          IMAGE=${{secrets.GCP_REGION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/todo-app/user-service:${{ github.sha }}
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+
+      - name: Get GKE credentials
+        run: |
+          gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER_NAME }} \
+            --zone ${{ secrets.GKE_CLUSTER_ZONE }} --project ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Deploy to GKE
+        run: |
+          # Create namespace if it doesn't exist
+          kubectl create namespace todo-app --dry-run=client -o yaml | kubectl apply -f -
+          
+          # Process and apply manifest
+          export IMAGE=${{secrets.GCP_REGION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/todo-app/frontend-service:${{ github.sha }}
+          cat scripts/frontend-service.yaml | envsubst | kubectl apply -f -
+          
+          # Verify deployment
+          kubectl rollout status deployment/frontend-service --namespace=todo-app
+          
+          # Get resources
+          echo "=== Cluster Resources ==="
+          kubectl get deployments,pods,services -n todo-app
+          
+          # Wait for external IP
+          echo "Waiting for LoadBalancer external IP..."
+          for i in {1..12}; do
+            EXTERNAL_IP=$(kubectl get svc frontend-service -n todo-app -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+            [ -n "$EXTERNAL_IP" ] && break || sleep 10
+          done
+          
+          if [ -z "$EXTERNAL_IP" ]; then
+            echo "::error::Failed to get LoadBalancer IP"
+            exit 1
+          fi
+          
+          echo "::notice::Service available at: http://$EXTERNAL_IP:3001"
+          echo "SERVICE_URL=http://$EXTERNAL_IP:3001" >> $GITHUB_ENV

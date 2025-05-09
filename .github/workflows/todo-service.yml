@@ -13,6 +13,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+      
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Unit Tests
+        run: npm test
 
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v1
@@ -41,7 +47,7 @@ jobs:
       - name: Build and push Docker image
         run: |
           cd todo-service
-          IMAGE=${{secrets.GCP_REGION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/test/todo-service:${{ github.sha }}
+          IMAGE=${{secrets.GCP_REGION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/todo-app/todo-service:${{ github.sha }}
           docker build -t "$IMAGE" .
           docker push "$IMAGE"
 
@@ -56,7 +62,7 @@ jobs:
           kubectl create namespace todo-app --dry-run=client -o yaml | kubectl apply -f -
           
           # Process and apply manifest
-          export IMAGE=${{secrets.GCP_REGION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/test/todo-service:${{ github.sha }}
+          export IMAGE=${{secrets.GCP_REGION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/todo-app/todo-service:${{ github.sha }}
           cat scripts/todo-service.yaml | envsubst | kubectl apply -f -
           
           # Verify deployment
@@ -66,17 +72,3 @@ jobs:
           echo "=== Cluster Resources ==="
           kubectl get deployments,pods,services -n todo-app
           
-          # Wait for external IP
-          echo "Waiting for LoadBalancer external IP..."
-          for i in {1..12}; do
-            EXTERNAL_IP=$(kubectl get svc todo-service -n todo-app -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-            [ -n "$EXTERNAL_IP" ] && break || sleep 10
-          done
-          
-          if [ -z "$EXTERNAL_IP" ]; then
-            echo "::error::Failed to get LoadBalancer IP"
-            exit 1
-          fi
-          
-          echo "::notice::Service available at: http://$EXTERNAL_IP:3001"
-          echo "SERVICE_URL=http://$EXTERNAL_IP:3001" >> $GITHUB_ENV

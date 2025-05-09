@@ -45,7 +45,7 @@ metadata:
   name: todo-service
   namespace: todo-app
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: todo-service
   ports:

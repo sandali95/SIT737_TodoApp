@@ -9,15 +9,16 @@ jobs:
     permissions:
       contents: read
       id-token: write
+    defaults:
+      run:
+        working-directory: user-service
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Install Dependencies
-        run:
-          cd user-service 
-          npm ci
+        run: npm ci
 
       - name: Run Unit Tests
         run: npm test
@@ -48,7 +49,6 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          cd user-service
           IMAGE=${{secrets.GCP_REGION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/todo-app/user-service:${{ github.sha }}
           docker build -t "$IMAGE" .
           docker push "$IMAGE"

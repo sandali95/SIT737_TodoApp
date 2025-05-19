@@ -5,7 +5,7 @@ metadata:
   name: user-service
   namespace: todo-app
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: user-service

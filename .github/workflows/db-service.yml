@@ -42,7 +42,7 @@ jobs:
             --dry-run=client -o yaml \
           | kubectl apply -f -
 
-      - name: Deploy MongoDB StatefulSet & Services
+      - name: Deploy MongoDB Services
         run: |
           kubectl apply -f scripts/db-service.yaml
 

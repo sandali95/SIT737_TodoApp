@@ -23,9 +23,22 @@ spec:
             - name: PORT
               value: "3001"
             - name: MONGO_URI
-              value: "mongodb://mongo:27017/todoapp"
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: MONGO_URI
             - name: JWT_SECRET
               value: "your_jwt_secret"
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: MONGO_INITDB_ROOT_USERNAME
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: MONGO_INITDB_ROOT_PASSWORD
           readinessProbe:
             httpGet:
               path: /health

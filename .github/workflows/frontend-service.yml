@@ -11,7 +11,7 @@ jobs:
       id-token: write
     defaults:
       run:
-        working-directory: frontend-service
+        working-directory: frontend-gateway
 
     steps:
       - name: Checkout repository

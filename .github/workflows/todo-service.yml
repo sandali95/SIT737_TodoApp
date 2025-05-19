@@ -74,4 +74,5 @@ jobs:
           # Get resources
           echo "=== Cluster Resources ==="
           kubectl get deployments,pods,services -n todo-app
+        working-directory: .
           

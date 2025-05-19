@@ -23,7 +23,7 @@ jobs:
 
       - name: Configure kube context
         run: |
-          gcloud container clusters get-credentials ${{ secrets.GCP_PROJECT_ID }} --region=${{ secrets.GCP_REGION }}
+          gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER_NAME }} --region=${{ secrets.GCP_REGION }}
 
       - name: Apply K8s manifests
         run: |

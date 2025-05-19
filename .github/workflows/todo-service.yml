@@ -19,8 +19,7 @@ jobs:
       
       - name: Install Dependencies
         run:
-          cd todo-service 
-          npm ci
+          cd todo-service && npm ci
 
       - name: Run Unit Tests
         run: npm test

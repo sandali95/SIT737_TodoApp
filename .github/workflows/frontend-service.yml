@@ -19,8 +19,7 @@ jobs:
 
       - name: Install Dependencies
         run:
-          cd frontend-service 
-          npm ci
+          cd frontend-service && npm ci
 
       - name: Run Unit Tests
         run: npm test

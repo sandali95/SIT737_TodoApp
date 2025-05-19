@@ -47,7 +47,7 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          IMAGE=${{secrets.GCP_REGION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/todo-app/user-service:${{ github.sha }}
+          IMAGE=${{secrets.GCP_REGION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/todo-app/frontend-service:${{ github.sha }}
           docker build -t "$IMAGE" .
           docker push "$IMAGE"
 

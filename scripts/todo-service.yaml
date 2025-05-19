@@ -22,7 +22,7 @@ spec:
           env:
             - name: PORT
               value: "3001"
-            - name: MONGO_URI
+            - name: MONGODB_URI
               valueFrom:
                 secretKeyRef:
                   name: mongo-secret

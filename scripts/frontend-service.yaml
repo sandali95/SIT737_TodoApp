@@ -40,6 +40,7 @@ metadata:
   namespace: todo-app
 spec:
   type: LoadBalancer
+  loadBalancerIP: 35.189.12.21
   selector:
     app: frontend-service
   ports:

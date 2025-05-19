@@ -3,6 +3,20 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: todo-app
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-pvc
+  namespace: todo-app
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
 ---
 apiVersion: v1
 kind: Secret
@@ -11,18 +25,18 @@ metadata:
   namespace: todo-app
 type: Opaque
 stringData:
-  MONGO_INITDB_ROOT_USERNAME: "${MONGO_ROOT_USER}"  
-  MONGO_INITDB_ROOT_PASSWORD: "${MONGO_ROOT_PASSWORD}"
-  MONGO_URI: mongodb://MONGO_ROOT_USER:MONGO_ROOT_PASSWORD@mongo:27017/todoapp?authSource=admin
+  MONGO_INITDB_ROOT_USERNAME: todo-user
+  MONGO_INITDB_ROOT_PASSWORD: securepassword
+  MONGO_URI: mongodb://todo-user:securepassword@mongo:27017/todoapp?authSource=admin
+
 
 ---
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: mongo
   namespace: todo-app
 spec:
-  serviceName: "mongo-headless"
   replicas: 1
   selector:
     matchLabels:
@@ -33,45 +47,32 @@ spec:
         app: mongo
     spec:
       containers:
-        - name: mongo
-          image: mongo:6.0
-          ports:
-            - containerPort: 27017
-          env:
-            - name: MONGO_INITDB_ROOT_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: mongo-secret
-                  key: MONGO_INITDB_ROOT_USERNAME
-            - name: MONGO_INITDB_ROOT_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mongo-secret
-                  key: MONGO_INITDB_ROOT_PASSWORD
-          volumeMounts:
-            - name: data
-              mountPath: /data/db
-  volumeClaimTemplates:
-    - metadata:
-        name: data
-      spec:
-        accessModes: ["ReadWriteOnce"]
-        resources:
-          requests:
-            storage: 10Gi
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: mongo-headless
-  namespace: todo-app
-spec:
-  clusterIP: None
-  selector:
-    app: mongo
-  ports:
-    - port: 27017
-      targetPort: 27017
+      - name: mongo
+        image: mongo:6.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 27017
+        env:
+        - name: MONGO_INITDB_DATABASE
+          value: todoapp
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret
+              key: MONGO_INITDB_ROOT_USERNAME
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret
+              key: MONGO_INITDB_ROOT_PASSWORD
+        volumeMounts:
+        - name: mongo-storage
+          mountPath: /data/db
+      volumes:
+      - name: mongo-storage
+        persistentVolumeClaim:
+          claimName: mongo-pvc
+
 ---
 apiVersion: v1
 kind: Service
@@ -83,5 +84,5 @@ spec:
   selector:
     app: mongo
   ports:
-    - port: 27017
-      targetPort: 27017
+  - port: 27017
+    targetPort: 27017

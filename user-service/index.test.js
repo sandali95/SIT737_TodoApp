@@ -1,6 +1,7 @@
 
 const request = require('supertest');
 const mongoose = require('mongoose');
+const User = require('./models/user');
 const jwt = require('jsonwebtoken');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 
@@ -13,7 +14,11 @@ beforeAll(async () => {
   process.env.MONGODB_URI = mongoServer.getUri();
   process.env.JWT_SECRET  = 'testsecret';
 
+
   app = require('./index');
+
+  await User.findOneAndDelete({ username: 'alice' });
+
 });
 
 afterAll(async () => {
@@ -33,6 +38,7 @@ describe('User Service Endpoints', () => {
   });
 
   describe('POST /signup', () => {
+  
     it('should create a new user and return 201', async () => {
       const res = await request(app)
         .post('/signup')

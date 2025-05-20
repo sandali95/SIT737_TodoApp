@@ -28,7 +28,10 @@ spec:
                   name: mongo-secret
                   key: MONGO_URI
             - name: JWT_SECRET
-              value: "your_jwt_secret"
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_SECRET
             - name: DB_USER
               valueFrom:
                 secretKeyRef:

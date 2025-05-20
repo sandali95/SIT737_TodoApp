@@ -132,24 +132,17 @@ To manually deploy this application to Google Cloud Platform (GCP), follow these
 2. **Update Kubernetes Manifests:**
    - Edit the deployment YAML files in the `scripts/` directory to use your pushed image URLs (replace `${IMAGE}` with your image path).
 
-3. **Set Up GKE Cluster:**
-   - Create a Kubernetes cluster in GCP using the Cloud Console or CLI.
-   ```sh
-   gcloud container clusters create todo-cluster --zone <your-zone>
-   gcloud container clusters get-credentials todo-cluster --zone <your-zone>
-   ```
-
-4. **Create Namespace:**
+3. **Create Namespace:**
    ```sh
    kubectl create namespace todo-app
    ```
 
-5. **Apply Kubernetes Manifests:**
+4. **Apply Kubernetes Manifests:**
    ```sh
    kubectl apply -f scripts/
    ```
 
-6. **Access the Application:**
+5. **Access the Application:**
    - Once the LoadBalancer service is provisioned, get the external IP:
    ```sh
    kubectl get svc -n todo-app
@@ -217,7 +210,6 @@ Once metrics are flowing into Cloud Monitoring (including those from Managed Pro
      - `prometheus/container_cpu_usage_seconds_total` (CPU usage)
      - `prometheus/container_memory_usage_bytes` (Memory usage)
      - `kubernetes.io/container/restart_count` (Pod/container restarts)
-     - `run.googleapis.com/request_count` (Request count for Cloud Run, if used)
 
 3. **Group Charts By:**
    - Pod name

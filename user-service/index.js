@@ -97,7 +97,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Internal Server Error Occurred", message: err.message });
 });
 
-module.exports = app;
+module.exports = { app, User };
 if (require.main === module) {
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => logger.info(`User Service running on port ${PORT}`));

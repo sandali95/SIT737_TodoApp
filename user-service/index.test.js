@@ -1,12 +1,12 @@
 
 const request = require('supertest');
 const mongoose = require('mongoose');
-const User = require('./models/user');
 const jwt = require('jsonwebtoken');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 
 let app;
 let mongoServer;
+let User;
 
 beforeAll(async () => {
  
@@ -14,8 +14,11 @@ beforeAll(async () => {
   process.env.MONGODB_URI = mongoServer.getUri();
   process.env.JWT_SECRET  = 'testsecret';
 
+  const mod = require('./index');
+  app = mod.app;
+  User = mod.User;
 
-  app = require('./index');
+
 
   await User.findOneAndDelete({ username: 'alice' });
 

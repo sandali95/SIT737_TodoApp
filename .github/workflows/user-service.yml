@@ -2,7 +2,10 @@ name: CI/CD User Service
 
 on:
   workflow_dispatch:
-
+  push:
+    paths:
+      - 'user-service/**'
+      - scripts/user-service.yaml
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest

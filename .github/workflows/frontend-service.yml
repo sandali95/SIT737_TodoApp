@@ -2,6 +2,10 @@ name: CI/CD Frontend Service
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - 'frontend-gateway/**'
+      - scripts/frontend-service.yaml
 
 jobs:
   build-and-deploy:

@@ -63,8 +63,32 @@ Each service uses environment variables for configuration. See the `.env` files 
 - `JWT_SECRET`: Secret for JWT signing
 - `PORT`: Service port
 
+## Configure and Deploy into GCP
 
-## GitHub Workflows & Automation
+### Prerequisites
+
+- **Create a GKE Cluster:**  
+  In your GCP project, create a Google Kubernetes Engine (GKE) cluster. Follow the [official guide](https://cloud.google.com/kubernetes-engine/docs/how-to/creating-a-cluster) for detailed steps.
+- **Install CLI Tools:**  
+  Ensure that both `kubectl` and `gcloud` CLI tools are installed and configured on your local machine.
+- **Set Up GCP CLI with gke-gcloud-auth-plugin:**  
+  This plugin is required for authentication with GKE clusters.
+
+### Authenticate and Configure Your GCP Project
+
+Run the following commands in your terminal to authenticate and configure your GCP project:
+
+```sh
+gcloud auth login
+gcloud config set project YOUR_PROJECT_ID
+gcloud container clusters get-credentials YOUR_CLUSTER_NAME --region YOUR_CLUSTER_REGION
+```
+
+This will attach the GCP cluster configurations to your local kubeconfig for usage with `kubectl`.
+
+
+
+### GitHub Workflows & Automation
 
 This project uses GitHub Actions for continuous integration and deployment (CI/CD). The workflows are defined in the [`.github/workflows/`](.github/workflows/) directory and automate the following tasks:
 
@@ -73,7 +97,7 @@ This project uses GitHub Actions for continuous integration and deployment (CI/C
 - **Push to Registry:** Pushes built Docker images to Google Container Registry (GCR) or Artifact Registry.
 - **Deploy to GKE:** Applies Kubernetes manifests to the Google Kubernetes Engine (GKE) cluster for automated deployments.
 
-### How it Works
+#### How it Works
 
 1. **On Push or Pull Request:**  
    When you push code or open a pull request, the workflow triggers:
@@ -92,7 +116,7 @@ This project uses GitHub Actions for continuous integration and deployment (CI/C
 
 For more details, see the workflow YAML files in the `.github/workflows/` directory.
 
-## GCP Manual Deployments
+### GCP Manual Deployments
 
 To manually deploy this application to Google Cloud Platform (GCP), follow these steps:
 

@@ -63,10 +63,6 @@ Each service uses environment variables for configuration. See the `.env` files 
 - `JWT_SECRET`: Secret for JWT signing
 - `PORT`: Service port
 
-## CI/CD
-
-- Automated via GitHub Actions ([`.github/workflows/`](.github/workflows/))
-- Builds, tests, and deploys Docker images to Google Cloud and GKE
 
 ## GitHub Workflows & Automation
 
@@ -140,7 +136,7 @@ To manually deploy this application to Google Cloud Platform (GCP), follow these
 
 ## Logging and GCP Log Access
 
-Each microservice in this application outputs logs to standard output (stdout) and standard error (stderr). When running on Google Kubernetes Engine (GKE), these logs are automatically collected by Google Cloud Logging (formerly Stackdriver).
+Each microservice in this application outputs logs to standard output (stdout) and standard error (stderr). When running on Google Kubernetes Engine (GKE), these logs are automatically collected by Google Cloud Logging.
 
 ### Viewing Logs in GCP
 
@@ -163,19 +159,13 @@ Each microservice in this application outputs logs to standard output (stdout) a
      kubectl get pods -n todo-app
      ```
 
-3. **Log Aggregation:**
-   - All logs are available in Cloud Logging for searching, filtering, and alerting.
-   - You can set up log-based metrics and alerts in the Cloud Console.
-
-> **Tip:** For production, consider using structured logging (e.g., JSON) for better search and analysis in Cloud Logging.
-
 ## Monitoring and Alerts in GCP
 
-Google Cloud Platform provides robust monitoring and alerting capabilities through Google Cloud Monitoring (formerly Stackdriver Monitoring). This allows you to track the health and performance of your Kubernetes cluster and microservices.
+Google Cloud Platform provides robust monitoring and alerting capabilities through Google Cloud Monitoring. This allows to track the health and performance of your Kubernetes cluster and microservices.
 
 ### Managed Prometheus in GCP
 
-GCP offers a managed Prometheus solution that integrates seamlessly with Google Kubernetes Engine (GKE). Managed Prometheus allows you to collect, store, and query Prometheus metrics without managing your own Prometheus servers.
+GCP offers a managed Prometheus solution that integrates seamlessly with Google Kubernetes Engine (GKE). Managed Prometheus allows to collect, store, and query Prometheus metrics without managing own Prometheus servers.
 
 - **Enable Managed Prometheus:**  
   Enable the Managed Service for Prometheus in your GCP project and GKE cluster or run
@@ -188,14 +178,33 @@ GCP offers a managed Prometheus solution that integrates seamlessly with Google 
 
 - **Automatic Scraping:**  
   GKE Autopilot and Standard clusters can automatically scrape metrics from workloads annotated for Prometheus.
-- **Prometheus Compatibility:**  
-  Use standard Prometheus client libraries in your Node.js services to expose custom metrics at `/metrics` endpoints.
-- **Query Metrics:**  
-  Use the Cloud Monitoring Metrics Explorer or Prometheus Query Language (PromQL) to query metrics.
 - **Dashboards:**  
   Create dashboards in Cloud Monitoring to visualize Prometheus metrics alongside other GCP metrics.
 
-For more details, see the [GCP Managed Service for Prometheus documentation](https://cloud.google.com/stackdriver/docs/solutions/prometheus).
+### Building Full Dashboards
+
+Once metrics are flowing into Cloud Monitoring (including those from Managed Prometheus), you can build comprehensive dashboards to visualize your application's health and performance:
+
+1. **Navigate to Dashboards:**
+   - In the Google Cloud Console, go to **Monitoring → Dashboards → Create Dashboard**.
+
+2. **Add Widgets for Key Metrics:**
+   - Add charts using the following metrics:
+     - `prometheus/container_cpu_usage_seconds_total` (CPU usage)
+     - `prometheus/container_memory_usage_bytes` (Memory usage)
+     - `kubernetes.io/container/restart_count` (Pod/container restarts)
+     - `run.googleapis.com/request_count` (Request count for Cloud Run, if used)
+
+3. **Group Charts By:**
+   - Pod name
+   - Namespace
+   - Container
+   - Node
+
+4. **Customize and Save:**
+   - Adjust chart settings, filters, and groupings as needed.
+   - Save your dashboard for ongoing monitoring.
+
 
 ### Creating Alerts
 
@@ -203,6 +212,4 @@ For more details, see the [GCP Managed Service for Prometheus documentation](htt
 - Set conditions based on metrics (e.g., high CPU usage, pod restarts, HTTP error rates, or custom Prometheus metrics).
 - Configure notification channels (email, SMS, Slack, etc.) to receive alerts.
 - Save and enable your alerting policy.
-
-> **Tip:** Combine Cloud Logging, Monitoring, and Managed Prometheus for comprehensive observability of your application.
 

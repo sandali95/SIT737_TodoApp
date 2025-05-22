@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: todo-service
-          image: ${IMAGE1}
+          image: ${IMAGE}
           ports:
             - containerPort: 3001
           env:

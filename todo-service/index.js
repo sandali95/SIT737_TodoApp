@@ -12,7 +12,7 @@ const logger = winston.createLogger({
   format: winston.format.json(),
   transports: [
     new winston.transports.Console(),
-    new winston.transports.File({ filename: "logs/error.log" }),
+    new winston.transports.File({ filename: "logs/info.log" }),
   ],
 });
 
@@ -68,7 +68,8 @@ app.get('/todos', authenticate, async (req, res) => {
   try {
     const todos = await Todo.find({ userId: req.user.id });
     logger.info(`Todos fetched for user: ${req.user.username}`);
-    res.json(todos);
+    res.status(500).json({ error: 'Error fetching todos' });
+    //res.json(todos);
   } catch (err) {
     logger.error(`Error fetching todos: ${err.message}`);
     res.status(500).json({ error: 'Error fetching todos' });

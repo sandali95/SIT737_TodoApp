@@ -7,7 +7,6 @@ require('dotenv').config(); // Load environment variables from .env
 const app = express();
 const PORT = process.env.PORT || 3002;
 
-// URLs of your microservices
 const USER_SERVICE_URL = process.env.USER_SERVICE_URL ;
 const TODO_SERVICE_URL = process.env.TODO_SERVICE_URL ;
 

@@ -7,7 +7,7 @@ jobs:
   deploy-mongo:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write    # for workload identity, if used
+      id-token: write
       contents: read
 
     steps:
@@ -39,8 +39,8 @@ jobs:
             --namespace=todo-app \
             --from-literal=MONGO_INITDB_ROOT_USERNAME="${{ secrets.MONGO_ROOT_USER }}" \
             --from-literal=MONGO_INITDB_ROOT_PASSWORD="${{ secrets.MONGO_ROOT_PASSWORD }}" \
-            --dry-run=client -o yaml \
-          | kubectl apply -f -
+            --from-literal=MONGO_URI="mongodb://${{ secrets.MONGO_ROOT_USER }}:${{ secrets.MONGO_ROOT_PASSWORD }}@mongo:27017/todoapp?authSource=admin" \
+            --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Deploy MongoDB Services
         run: |
@@ -48,5 +48,5 @@ jobs:
 
       - name: Wait for MongoDB
         run: |
-          kubectl rollout status statefulset/mongo -n todo-app --timeout=120s
-          kubectl get sts,pods,svc -n todo-app
+          kubectl rollout status deployment/mongo -n todo-app --timeout=120s
+          kubectl get pods,svc -n todo-app

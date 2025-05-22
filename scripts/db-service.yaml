@@ -25,9 +25,9 @@ metadata:
   namespace: todo-app
 type: Opaque
 stringData:
-  MONGO_INITDB_ROOT_USERNAME: todo-user
-  MONGO_INITDB_ROOT_PASSWORD: securepassword
-  MONGO_URI: mongodb://todo-user:securepassword@mongo:27017/todoapp?authSource=admin
+  MONGO_INITDB_ROOT_USERNAME: ""
+  MONGO_INITDB_ROOT_PASSWORD: ""
+  MONGO_URI: ""
 
 
 ---

@@ -6,6 +6,7 @@ on:
     paths:
       - user-service/**
       - scripts/user-service.yaml
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -39,20 +40,18 @@ jobs:
           install_components: 'gke-gcloud-auth-plugin'
 
       - name: Activate Service Account
-        run: |
-          gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+        run: gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
 
       - name: Print Service Account
-        run: |
-          gcloud auth list
+        run: gcloud auth list
 
       - name: Configure Docker for GCR
         run: |
-          gcloud auth configure-docker ${{secrets.GCP_REGION}}-docker.pkg.dev
+          gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
 
       - name: Build and push Docker image
         run: |
-          IMAGE=${{secrets.GCP_REGION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/todo-app/user-service:${{ github.sha }}
+          IMAGE=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/todo-app/user-service:${{ github.sha }}
           docker build -t "$IMAGE" .
           docker push "$IMAGE"
 
@@ -61,16 +60,20 @@ jobs:
           gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER_NAME }} \
             --zone ${{ secrets.GKE_CLUSTER_ZONE }} --project ${{ secrets.GCP_PROJECT_ID }}
 
+      - name: Create/update jwt-secret
+        run: |
+          kubectl create secret generic jwt-secret \
+            --namespace=todo-app \
+            --from-literal=JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+        working-directory: .
+
       - name: Deploy to GKE
         run: |
-          # Create namespace if it doesn't exist
           kubectl create namespace todo-app --dry-run=client -o yaml | kubectl apply -f -
           
-          # Process and apply manifest
-          export IMAGE=${{secrets.GCP_REGION}}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/todo-app/user-service:${{ github.sha }}
+          export IMAGE=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/todo-app/user-service:${{ github.sha }}
           cat scripts/user-service.yaml | envsubst | kubectl apply -f -
           
-          # Verify deployment
           kubectl rollout status deployment/user-service --namespace=todo-app
         working-directory: .
-          

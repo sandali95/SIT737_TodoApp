@@ -1,3 +1,11 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: jwt-secret
+  namespace: todo-app
+type: Opaque
+stringData:
+  JWT_SECRET: your_jwt_secret
 ---
 apiVersion: apps/v1
 kind: Deployment

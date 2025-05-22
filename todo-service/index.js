@@ -68,8 +68,7 @@ app.get('/todos', authenticate, async (req, res) => {
   try {
     const todos = await Todo.find({ userId: req.user.id });
     logger.info(`Todos fetched for user: ${req.user.username}`);
-    res.status(500).json({ error: 'Error fetching todos' });
-    //res.json(todos);
+    res.json(todos);
   } catch (err) {
     logger.error(`Error fetching todos: ${err.message}`);
     res.status(500).json({ error: 'Error fetching todos' });

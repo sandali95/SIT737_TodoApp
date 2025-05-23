@@ -15,11 +15,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Configure Winston Logger
 const logger = winston.createLogger({
-  level: "info", // Log level (info, warn, error, etc.)
+  level: "info", 
   format: winston.format.json(),
   transports: [
-    new winston.transports.Console(), // Logs to console
-    new winston.transports.File({ filename: "logs/error.log" }), // Logs to file
+    new winston.transports.Console(),
+    new winston.transports.File({ filename: "logs/error.log" }), 
   ],
 });
 

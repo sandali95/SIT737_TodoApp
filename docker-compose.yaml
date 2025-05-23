@@ -35,7 +35,7 @@ services:
     environment:
       - PORT=3001
       - MONGO_URI=mongodb://mongo:27017/todoapp
-      - JWT_SECRET=your_jwt_secret
+      - JWT_SECRET=todo_secret
     ports:
       - "3001:3001"
     depends_on:

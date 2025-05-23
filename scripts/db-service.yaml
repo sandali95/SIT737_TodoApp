@@ -18,19 +18,6 @@ spec:
       storage: 10Gi
 
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: mongo-secret
-  namespace: todo-app
-type: Opaque
-stringData:
-  MONGO_INITDB_ROOT_USERNAME: todo-user
-  MONGO_INITDB_ROOT_PASSWORD: securepassword
-  MONGO_URI: mongodb://todo-user:securepassword@mongo:27017/todoapp?authSource=admin
-
-
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:

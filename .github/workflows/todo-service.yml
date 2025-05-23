@@ -26,6 +26,9 @@ jobs:
         run:
           npm ci
 
+      - name: Run Unit Tests
+        run: npm test
+
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v1
         with:
